@@ -5,10 +5,12 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [Header("Movimiento")]
-    public float velocidadCaminar = 4f;
+    public float velocidadMovimiento = 5.0f;
     public float velocidadCorrer = 7f;
     public float fuerzaSalto = 6f;
     public float gravedad = -20f;
+    public float velocidadRotacion = 200.0f;
+    public float x, y;
 
     private CharacterController controller;
     private Vector3 velocidadVertical;
@@ -21,34 +23,41 @@ public class PlayerController : MonoBehaviour
         animator = GetComponentInChildren<Animator>();
     }
 
-    void Update()
-    {
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
+    
+void Update()
+{
+    x = Input.GetAxisRaw("Horizontal");
+    y = Input.GetAxisRaw("Vertical");
 
-        Vector3 direccion =transform.right * horizontal + transform.forward * vertical;
+    Vector3 direccion = new Vector3(x, 0f, y);
+    direccion = Vector3.ClampMagnitude(direccion, 1f);
 
-        if (animator != null){
-             animator.SetFloat("Speed", direccion.magnitude);
-        }
 
-        direccion = Vector3.ClampMagnitude(direccion, 1f);
-
-        bool corriendo = Input.GetKey(KeyCode.LeftShift) ||  Input.GetKey(KeyCode.RightShift);
-
-        float velocidad = corriendo ? velocidadCorrer : velocidadCaminar;
-
-        controller.Move(direccion * velocidad * Time.deltaTime);
-
-        if (controller.isGrounded && velocidadVertical.y < 0){
-            velocidadVertical.y = -2f;
-        }
-
-        if (controller.isGrounded &&Input.GetKeyDown(KeyCode.Space)) {
-            velocidadVertical.y = fuerzaSalto;
-        }
-
-        velocidadVertical.y += gravedad * Time.deltaTime;//esto es ara la gravedad
-        controller.Move(velocidadVertical * Time.deltaTime);
+    if (direccion.sqrMagnitude > 0.01f){
+        Quaternion rotacionObjetivo = Quaternion.LookRotation(direccion);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, rotacionObjetivo, velocidadRotacion * Time.deltaTime );
     }
+
+    bool corriendo = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+
+    float velocidad = corriendo? velocidadCorrer : velocidadMovimiento;
+
+    if (animator != null){animator.SetFloat("Speed", direccion.magnitude);}
+
+    controller.Move( transform.forward * direccion.magnitude * velocidad * Time.deltaTime);
+
+
+    if (controller.isGrounded && velocidadVertical.y < 0f) {
+        velocidadVertical.y = -2f;
+    }
+
+
+    if (controller.isGrounded && Input.GetKeyDown(KeyCode.Space)){ 
+        velocidadVertical.y = fuerzaSalto;
+    }
+
+    velocidadVertical.y += gravedad * Time.deltaTime;
+    controller.Move(velocidadVertical * Time.deltaTime);
+}
+
 }
