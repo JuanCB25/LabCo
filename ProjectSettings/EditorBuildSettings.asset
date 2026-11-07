@@ -6,8 +6,11 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/FreeLabAssets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
+    path: Assets/Lab&co/Scenes/menu/mainMenu.unity
+    guid: aeb3b569808903e438a15f5ecc73c4f2
+  - enabled: 1
+    path: Assets/Lab&co/Scenes/Levels/Level01_Sotano.unity
+    guid: 08916529b6a2d814bb863029323f8ff4
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
