@@ -31,27 +31,46 @@ public class InteraccionJugador : MonoBehaviour
         }
 
         // Tecla Espacio para Lanzar
-        if (Input.GetKeyDown(KeyCode.Space) && objetoEnMano != null)
+        if (Input.GetKeyDown(KeyCode.C) && objetoEnMano != null)
         {
             LanzarObjeto();
         }
     }
 
-    private void IntentarCoger()
+   private void IntentarCoger()
     {
-        // Comprobamos si hay un objeto interactuable delante
-        Vector3 puntoDeteccion = transform.position + transform.forward * 0.8f;
+        // Punto de detección elevado a la altura de la cintura/mesa
+        Vector3 puntoDeteccion = transform.position + Vector3.up * 0.8f + transform.forward * 0.8f;
         Collider[] detectados = Physics.OverlapSphere(puntoDeteccion, radioDeteccion, capaObjetos);
 
-        if (detectados.Length > 0)
+        if (detectados.Length == 0)
         {
-            ItemRecogible item = detectados[0].GetComponent<ItemRecogible>();
+            Debug.Log("No hay nada dentro del radio de detección al pulsar E.");
+            return;
+        }
+
+        // Recorremos todos los colliders detectados en el área
+        foreach (Collider col in detectados)
+        {
+            Debug.Log("Analizando collider: " + col.name);
+
+            // Si el collider detectado es del propio jugador, lo ignoramos
+            if (col.gameObject == gameObject || col.transform.IsChildOf(transform))
+            {
+                continue;
+            }
+
+            ItemRecogible item = col.GetComponentInParent<ItemRecogible>();
             if (item != null)
             {
                 objetoEnMano = item;
                 objetoEnMano.Coger(holdPoint);
+                Debug.Log("¡Objeto cogido con éxito: " + item.name + "!");
+                return; // Detenemos la búsqueda al coger el objeto
             }
         }
+
+        Debug.LogWarning("Se detectaron objetos con capa Interactuable, pero ninguno tenía ItemRecogible.");
     }
 
     private void SoltarObjeto()
