@@ -2,96 +2,146 @@ using UnityEngine;
 
 public class InteraccionJugador : MonoBehaviour
 {
+    public enum RolJugador { Jugador1, Jugador2 }
+
+    [Header("Identificación")]
+    [SerializeField] private RolJugador rol = RolJugador.Jugador1;
+
     [Header("Referencias")]
     [SerializeField] private Transform holdPoint;
 
-    [Header("Parámetros de Detección")]
-    [SerializeField] private float radioDeteccion = 1.2f;
+    [Header("Detección")]
+    [SerializeField] private float distanciaFrontal = 0.5f;
+    [SerializeField] private float radioDeteccion = 0.5f;
+    [SerializeField] private float distanciaMaxSnap = 0.9f;
     [SerializeField] private LayerMask capaObjetos;
 
     [Header("Lanzamiento")]
-    [SerializeField] private float fuerzaLanzamiento = 8f;
-    [SerializeField] private float anguloElevacion = 0.3f; // Elevación para la parábola
+    [SerializeField] private float fuerzaLanzamiento = 8.5f;
+    [SerializeField] private float anguloElevacion = 0.25f;
 
     private ItemRecogible objetoEnMano;
 
     void Update()
     {
-        // Tecla E para Coger / Soltar
-        if (Input.GetKeyDown(KeyCode.E))
+        // Tecla de Interacción (Coger / Colocar / Soltar)
+        if (EsTeclaInteractuarPulsada())
         {
-            if (objetoEnMano == null)
-            {
-                IntentarCoger();
-            }
-            else
-            {
-                SoltarObjeto();
-            }
+            GestionarInteraccion();
         }
 
-        // Tecla Espacio para Lanzar
-        if (Input.GetKeyDown(KeyCode.C) && objetoEnMano != null)
+        // Tecla de Lanzar
+        if (EsTeclaLanzarPulsada() && objetoEnMano != null)
         {
             LanzarObjeto();
         }
     }
 
-   private void IntentarCoger()
+    private bool EsTeclaInteractuarPulsada()
     {
-        // Punto de detección elevado a la altura de la cintura/mesa
-        Vector3 puntoDeteccion = transform.position + Vector3.up * 0.8f + transform.forward * 0.8f;
-        Collider[] detectados = Physics.OverlapSphere(puntoDeteccion, radioDeteccion, capaObjetos);
-
-        if (detectados.Length == 0)
+        if (rol == RolJugador.Jugador1)
         {
-            Debug.Log("No hay nada dentro del radio de detección al pulsar E.");
-            return;
+            return Input.GetKeyDown(KeyCode.E);
         }
-
-        // Recorremos todos los colliders detectados en el área
-        foreach (Collider col in detectados)
+        else
         {
-            Debug.Log("Analizando collider: " + col.name);
-
-            // Si el collider detectado es del propio jugador, lo ignoramos
-            if (col.gameObject == gameObject || col.transform.IsChildOf(transform))
-            {
-                continue;
-            }
-
-            ItemRecogible item = col.GetComponentInParent<ItemRecogible>();
-            if (item != null)
-            {
-                objetoEnMano = item;
-                objetoEnMano.Coger(holdPoint);
-                Debug.Log("¡Objeto cogido con éxito: " + item.name + "!");
-                return; // Detenemos la búsqueda al coger el objeto
-            }
+            // Enter del teclado principal o del teclado numérico
+            return Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter);
         }
-
-        Debug.LogWarning("Se detectaron objetos con capa Interactuable, pero ninguno tenía ItemRecogible.");
     }
 
-    private void SoltarObjeto()
+    private bool EsTeclaLanzarPulsada()
     {
-        objetoEnMano.Soltar();
-        objetoEnMano = null;
+        if (rol == RolJugador.Jugador1)
+        {
+            return Input.GetKeyDown(KeyCode.C);
+        }
+        else
+        {
+            return Input.GetKeyDown(KeyCode.Backspace);
+        }
+    }
+
+    private void GestionarInteraccion()
+    {
+        Vector3 puntoDeteccion = transform.position + Vector3.up * 0.7f + transform.forward * distanciaFrontal;
+        Collider[] detectados = Physics.OverlapSphere(puntoDeteccion, radioDeteccion, capaObjetos);
+
+        // 1. PRIORIDAD: Buscar mesa cercana
+        MesaLaboratorio mesaCandidata = null;
+        float distanciaMinima = float.MaxValue;
+
+        foreach (Collider col in detectados)
+        {
+            MesaLaboratorio mesa = col.GetComponentInParent<MesaLaboratorio>();
+            if (mesa != null)
+            {
+                float distAlSnap = Vector3.Distance(puntoDeteccion, mesa.SnapPoint.position);
+                if (distAlSnap <= distanciaMaxSnap && distAlSnap < distanciaMinima)
+                {
+                    distanciaMinima = distAlSnap;
+                    mesaCandidata = mesa;
+                }
+            }
+        }
+
+        if (mesaCandidata != null)
+        {
+            if (objetoEnMano != null && mesaCandidata.PuedeRecibirItem())
+            {
+                mesaCandidata.ColocarItem(objetoEnMano);
+                objetoEnMano = null;
+                return;
+            }
+
+            if (objetoEnMano == null && mesaCandidata.EstaOcupada)
+            {
+                objetoEnMano = mesaCandidata.RetirarItem();
+                objetoEnMano.Coger(holdPoint);
+                return;
+            }
+
+            if (objetoEnMano != null && mesaCandidata.EstaOcupada)
+            {
+                return;
+            }
+        }
+
+        // 2. SEGUNDA OPCIÓN: Suelo
+        if (objetoEnMano != null)
+        {
+            objetoEnMano.Soltar();
+            objetoEnMano = null;
+        }
+        else
+        {
+            foreach (Collider col in detectados)
+            {
+                // Ignorar colisiones consigo mismo o sus propios hijos
+                if (col.gameObject == gameObject || col.transform.IsChildOf(transform)) continue;
+
+                ItemRecogible itemSuelo = col.GetComponentInParent<ItemRecogible>();
+                if (itemSuelo != null)
+                {
+                    objetoEnMano = itemSuelo;
+                    objetoEnMano.Coger(holdPoint);
+                    return;
+                }
+            }
+        }
     }
 
     private void LanzarObjeto()
     {
-        // Calculamos un vector inclinado hacia arriba para la parábola física
         Vector3 dirLanzamiento = (transform.forward + Vector3.up * anguloElevacion).normalized;
         objetoEnMano.Lanzar(dirLanzamiento, fuerzaLanzamiento);
         objetoEnMano = null;
     }
 
-    // Gizmo visual en el editor para calibrar el rango de alcance
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.yellow;
-        Vector3 puntoDeteccion = transform.position + transform.forward * 0.8f;
+        Gizmos.color = (rol == RolJugador.Jugador1) ? Color.yellow : Color.magenta;
+        Vector3 puntoDeteccion = transform.position + Vector3.up * 0.7f + transform.forward * distanciaFrontal;
         Gizmos.DrawWireSphere(puntoDeteccion, radioDeteccion);
     }
 }
