@@ -7,53 +7,51 @@ public class MesaLaboratorio : MonoBehaviour
     [Tooltip("Objeto vacío hijo donde reposará el matraz")]
     [SerializeField] private Transform snapPoint;
 
-    private ItemRecogible itemActual;
+    [Header("Indicador Visual")]
+    [SerializeField] private MeshRenderer indicadorVisual;
+    [SerializeField] private Color colorDisponible = new Color(0f, 1f, 0.8f, 0.4f);
+    [SerializeField] private Color colorOcupado = new Color(1f, 0.2f, 0.2f, 0.15f);
+
+    protected MaterialPropertyBlock propBlock;
+    protected ItemRecogible itemActual;
 
     public Transform SnapPoint => snapPoint != null ? snapPoint : transform;
 
-    // Comprobación doble: variable en memoria Y presencia real de hijos en el Transform
-    public bool EstaOcupada
+    void Awake()
+    {
+        propBlock = new MaterialPropertyBlock();
+        ActualizarIndicador();
+    }
+
+    // Marcado como VIRTUAL para que el dispensador pueda sobreescribirlo
+    public virtual bool EstaOcupada
     {
         get
         {
-            if (itemActual != null) return true;
-
-            // Salvaguarda: si la variable se perdió pero hay un objeto físico emparentado
-            if (SnapPoint.childCount > 0)
+            if (itemActual != null && itemActual.transform.parent != SnapPoint)
             {
-                itemActual = SnapPoint.GetComponentInChildren<ItemRecogible>();
-                return itemActual != null;
+                itemActual = null;
             }
-
-            return false;
+            return itemActual != null;
         }
     }
 
-    public bool PuedeRecibirItem()
-    {
-        return !EstaOcupada;
-    }
+    // Marcado como VIRTUAL
+    public virtual bool PuedeRecibirItem() => !EstaOcupada;
 
-    public bool ColocarItem(ItemRecogible item)
+    // Marcado como VIRTUAL
+    public virtual bool ColocarItem(ItemRecogible item)
     {
         if (item == null || EstaOcupada) return false;
 
         itemActual = item;
-
-        // Emparentamos respetando la escala y posición de mundo actual
         itemActual.transform.SetParent(SnapPoint, true);
-
-        // Ajustamos la posición y rotación exactas al SnapPoint
         itemActual.transform.position = SnapPoint.position;
-        itemActual.transform.rotation = SnapPoint.rotation;
+        itemActual.transform.rotation = Quaternion.Euler(0f, SnapPoint.eulerAngles.y, 0f);
 
-        // Si el objeto tenía guardada su escala de fábrica, la restauramos
         if (itemActual.EscalaOriginal != Vector3.zero)
-        {
             itemActual.transform.localScale = itemActual.EscalaOriginal;
-        }
 
-        // Desactivamos físicas
         Rigidbody rb = itemActual.GetComponent<Rigidbody>();
         if (rb != null)
         {
@@ -63,31 +61,36 @@ public class MesaLaboratorio : MonoBehaviour
             rb.useGravity = false;
         }
 
-        // Apagamos colliders para evitar solapamientos
         Collider[] colliders = itemActual.GetComponentsInChildren<Collider>();
-        foreach (Collider c in colliders)
-        {
-            c.enabled = false;
-        }
+        foreach (Collider c in colliders) c.enabled = false;
 
+        ActualizarIndicador();
         return true;
     }
 
-    public ItemRecogible RetirarItem()
+    // Marcado como VIRTUAL
+    public virtual ItemRecogible RetirarItem()
     {
-        if (!EstaOcupada) return null;
+        if (itemActual == null) return null;
 
         ItemRecogible itemRetirado = itemActual;
         itemActual = null;
+
+        itemRetirado.transform.SetParent(null);
+
+        ActualizarIndicador();
         return itemRetirado;
     }
 
-    private void OnDrawGizmosSelected()
+    protected virtual void ActualizarIndicador()
     {
-        if (snapPoint != null)
-        {
-            Gizmos.color = EstaOcupada ? Color.red : Color.cyan;
-            Gizmos.DrawWireSphere(snapPoint.position, 0.2f);
-        }
+        if (indicadorVisual == null) return;
+
+        if (propBlock == null) propBlock = new MaterialPropertyBlock();
+
+        indicadorVisual.GetPropertyBlock(propBlock);
+        Color colorFinal = EstaOcupada ? colorOcupado : colorDisponible;
+        propBlock.SetColor("_BaseColor", colorFinal);
+        indicadorVisual.SetPropertyBlock(propBlock);
     }
 }

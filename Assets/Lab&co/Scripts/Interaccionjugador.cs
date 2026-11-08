@@ -2,36 +2,63 @@ using UnityEngine;
 
 public class InteraccionJugador : MonoBehaviour
 {
+    public enum RolJugador { Jugador1, Jugador2 }
+
+    [Header("Identificación")]
+    [SerializeField] private RolJugador rol = RolJugador.Jugador1;
+
     [Header("Referencias")]
     [SerializeField] private Transform holdPoint;
 
     [Header("Detección")]
-    [Tooltip("Distancia hacia delante desde el centro del personaje")]
     [SerializeField] private float distanciaFrontal = 0.5f;
-    [Tooltip("Radio de la esfera de detección")]
     [SerializeField] private float radioDeteccion = 0.5f;
+    [SerializeField] private float distanciaMaxSnap = 0.9f;
     [SerializeField] private LayerMask capaObjetos;
 
-    [Header("Ajuste de Mesas")]
-    [Tooltip("Distancia máxima real entre el punto de mira y el SnapPoint para poder dejar/coger")]
-    [SerializeField] private float distanciaMaxSnap = 0.9f;
-
     [Header("Lanzamiento")]
-    [SerializeField] private float fuerzaLanzamiento = 8f;
-    [SerializeField] private float anguloElevacion = 0.3f;
+    [SerializeField] private float fuerzaLanzamiento = 8.5f;
+    [SerializeField] private float anguloElevacion = 0.25f;
 
     private ItemRecogible objetoEnMano;
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.E))
+        // Tecla de Interacción (Coger / Colocar / Soltar)
+        if (EsTeclaInteractuarPulsada())
         {
             GestionarInteraccion();
         }
 
-        if (Input.GetKeyDown(KeyCode.C) && objetoEnMano != null)
+        // Tecla de Lanzar
+        if (EsTeclaLanzarPulsada() && objetoEnMano != null)
         {
             LanzarObjeto();
+        }
+    }
+
+    private bool EsTeclaInteractuarPulsada()
+    {
+        if (rol == RolJugador.Jugador1)
+        {
+            return Input.GetKeyDown(KeyCode.E);
+        }
+        else
+        {
+            // Enter del teclado principal o del teclado numérico
+            return Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter);
+        }
+    }
+
+    private bool EsTeclaLanzarPulsada()
+    {
+        if (rol == RolJugador.Jugador1)
+        {
+            return Input.GetKeyDown(KeyCode.C);
+        }
+        else
+        {
+            return Input.GetKeyDown(KeyCode.Backspace);
         }
     }
 
@@ -40,7 +67,7 @@ public class InteraccionJugador : MonoBehaviour
         Vector3 puntoDeteccion = transform.position + Vector3.up * 0.7f + transform.forward * distanciaFrontal;
         Collider[] detectados = Physics.OverlapSphere(puntoDeteccion, radioDeteccion, capaObjetos);
 
-        // 1. PRIORIDAD: Buscar la MESA MÁS CERCANA cuyo SnapPoint esté a tiro
+        // 1. PRIORIDAD: Buscar mesa cercana
         MesaLaboratorio mesaCandidata = null;
         float distanciaMinima = float.MaxValue;
 
@@ -49,10 +76,7 @@ public class InteraccionJugador : MonoBehaviour
             MesaLaboratorio mesa = col.GetComponentInParent<MesaLaboratorio>();
             if (mesa != null)
             {
-                // Medimos la distancia real desde las manos/mirada hasta el SnapPoint de la mesa
                 float distAlSnap = Vector3.Distance(puntoDeteccion, mesa.SnapPoint.position);
-
-                // Solo la consideramos si está dentro del umbral de cercanía real
                 if (distAlSnap <= distanciaMaxSnap && distAlSnap < distanciaMinima)
                 {
                     distanciaMinima = distAlSnap;
@@ -61,10 +85,8 @@ public class InteraccionJugador : MonoBehaviour
             }
         }
 
-        // Si encontramos una mesa suficientemente cercana
         if (mesaCandidata != null)
         {
-            // Colocar objeto
             if (objetoEnMano != null && mesaCandidata.PuedeRecibirItem())
             {
                 mesaCandidata.ColocarItem(objetoEnMano);
@@ -72,7 +94,6 @@ public class InteraccionJugador : MonoBehaviour
                 return;
             }
 
-            // Retirar objeto
             if (objetoEnMano == null && mesaCandidata.EstaOcupada)
             {
                 objetoEnMano = mesaCandidata.RetirarItem();
@@ -80,14 +101,13 @@ public class InteraccionJugador : MonoBehaviour
                 return;
             }
 
-            // Si ambos están ocupados, bloqueamos la acción para no tirar nada al suelo
             if (objetoEnMano != null && mesaCandidata.EstaOcupada)
             {
                 return;
             }
         }
 
-        // 2. SEGUNDA OPCIÓN: Suelo / Espacio abierto
+        // 2. SEGUNDA OPCIÓN: Suelo
         if (objetoEnMano != null)
         {
             objetoEnMano.Soltar();
@@ -97,6 +117,7 @@ public class InteraccionJugador : MonoBehaviour
         {
             foreach (Collider col in detectados)
             {
+                // Ignorar colisiones consigo mismo o sus propios hijos
                 if (col.gameObject == gameObject || col.transform.IsChildOf(transform)) continue;
 
                 ItemRecogible itemSuelo = col.GetComponentInParent<ItemRecogible>();
@@ -119,7 +140,7 @@ public class InteraccionJugador : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.yellow;
+        Gizmos.color = (rol == RolJugador.Jugador1) ? Color.yellow : Color.magenta;
         Vector3 puntoDeteccion = transform.position + Vector3.up * 0.7f + transform.forward * distanciaFrontal;
         Gizmos.DrawWireSphere(puntoDeteccion, radioDeteccion);
     }
