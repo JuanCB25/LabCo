@@ -5,93 +5,122 @@ public class InteraccionJugador : MonoBehaviour
     [Header("Referencias")]
     [SerializeField] private Transform holdPoint;
 
-    [Header("Parámetros de Detección")]
-    [SerializeField] private float radioDeteccion = 1.2f;
+    [Header("Detección")]
+    [Tooltip("Distancia hacia delante desde el centro del personaje")]
+    [SerializeField] private float distanciaFrontal = 0.5f;
+    [Tooltip("Radio de la esfera de detección")]
+    [SerializeField] private float radioDeteccion = 0.5f;
     [SerializeField] private LayerMask capaObjetos;
+
+    [Header("Ajuste de Mesas")]
+    [Tooltip("Distancia máxima real entre el punto de mira y el SnapPoint para poder dejar/coger")]
+    [SerializeField] private float distanciaMaxSnap = 0.9f;
 
     [Header("Lanzamiento")]
     [SerializeField] private float fuerzaLanzamiento = 8f;
-    [SerializeField] private float anguloElevacion = 0.3f; // Elevación para la parábola
+    [SerializeField] private float anguloElevacion = 0.3f;
 
     private ItemRecogible objetoEnMano;
 
     void Update()
     {
-        // Tecla E para Coger / Soltar
         if (Input.GetKeyDown(KeyCode.E))
         {
-            if (objetoEnMano == null)
-            {
-                IntentarCoger();
-            }
-            else
-            {
-                SoltarObjeto();
-            }
+            GestionarInteraccion();
         }
 
-        // Tecla Espacio para Lanzar
         if (Input.GetKeyDown(KeyCode.C) && objetoEnMano != null)
         {
             LanzarObjeto();
         }
     }
 
-   private void IntentarCoger()
+    private void GestionarInteraccion()
     {
-        // Punto de detección elevado a la altura de la cintura/mesa
-        Vector3 puntoDeteccion = transform.position + Vector3.up * 0.8f + transform.forward * 0.8f;
+        Vector3 puntoDeteccion = transform.position + Vector3.up * 0.7f + transform.forward * distanciaFrontal;
         Collider[] detectados = Physics.OverlapSphere(puntoDeteccion, radioDeteccion, capaObjetos);
 
-        if (detectados.Length == 0)
-        {
-            Debug.Log("No hay nada dentro del radio de detección al pulsar E.");
-            return;
-        }
+        // 1. PRIORIDAD: Buscar la MESA MÁS CERCANA cuyo SnapPoint esté a tiro
+        MesaLaboratorio mesaCandidata = null;
+        float distanciaMinima = float.MaxValue;
 
-        // Recorremos todos los colliders detectados en el área
         foreach (Collider col in detectados)
         {
-            Debug.Log("Analizando collider: " + col.name);
-
-            // Si el collider detectado es del propio jugador, lo ignoramos
-            if (col.gameObject == gameObject || col.transform.IsChildOf(transform))
+            MesaLaboratorio mesa = col.GetComponentInParent<MesaLaboratorio>();
+            if (mesa != null)
             {
-                continue;
-            }
+                // Medimos la distancia real desde las manos/mirada hasta el SnapPoint de la mesa
+                float distAlSnap = Vector3.Distance(puntoDeteccion, mesa.SnapPoint.position);
 
-            ItemRecogible item = col.GetComponentInParent<ItemRecogible>();
-            if (item != null)
-            {
-                objetoEnMano = item;
-                objetoEnMano.Coger(holdPoint);
-                Debug.Log("¡Objeto cogido con éxito: " + item.name + "!");
-                return; // Detenemos la búsqueda al coger el objeto
+                // Solo la consideramos si está dentro del umbral de cercanía real
+                if (distAlSnap <= distanciaMaxSnap && distAlSnap < distanciaMinima)
+                {
+                    distanciaMinima = distAlSnap;
+                    mesaCandidata = mesa;
+                }
             }
         }
 
-        Debug.LogWarning("Se detectaron objetos con capa Interactuable, pero ninguno tenía ItemRecogible.");
-    }
+        // Si encontramos una mesa suficientemente cercana
+        if (mesaCandidata != null)
+        {
+            // Colocar objeto
+            if (objetoEnMano != null && mesaCandidata.PuedeRecibirItem())
+            {
+                mesaCandidata.ColocarItem(objetoEnMano);
+                objetoEnMano = null;
+                return;
+            }
 
-    private void SoltarObjeto()
-    {
-        objetoEnMano.Soltar();
-        objetoEnMano = null;
+            // Retirar objeto
+            if (objetoEnMano == null && mesaCandidata.EstaOcupada)
+            {
+                objetoEnMano = mesaCandidata.RetirarItem();
+                objetoEnMano.Coger(holdPoint);
+                return;
+            }
+
+            // Si ambos están ocupados, bloqueamos la acción para no tirar nada al suelo
+            if (objetoEnMano != null && mesaCandidata.EstaOcupada)
+            {
+                return;
+            }
+        }
+
+        // 2. SEGUNDA OPCIÓN: Suelo / Espacio abierto
+        if (objetoEnMano != null)
+        {
+            objetoEnMano.Soltar();
+            objetoEnMano = null;
+        }
+        else
+        {
+            foreach (Collider col in detectados)
+            {
+                if (col.gameObject == gameObject || col.transform.IsChildOf(transform)) continue;
+
+                ItemRecogible itemSuelo = col.GetComponentInParent<ItemRecogible>();
+                if (itemSuelo != null)
+                {
+                    objetoEnMano = itemSuelo;
+                    objetoEnMano.Coger(holdPoint);
+                    return;
+                }
+            }
+        }
     }
 
     private void LanzarObjeto()
     {
-        // Calculamos un vector inclinado hacia arriba para la parábola física
         Vector3 dirLanzamiento = (transform.forward + Vector3.up * anguloElevacion).normalized;
         objetoEnMano.Lanzar(dirLanzamiento, fuerzaLanzamiento);
         objetoEnMano = null;
     }
 
-    // Gizmo visual en el editor para calibrar el rango de alcance
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
-        Vector3 puntoDeteccion = transform.position + transform.forward * 0.8f;
+        Vector3 puntoDeteccion = transform.position + Vector3.up * 0.7f + transform.forward * distanciaFrontal;
         Gizmos.DrawWireSphere(puntoDeteccion, radioDeteccion);
     }
 }
