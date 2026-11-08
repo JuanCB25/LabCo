@@ -1,63 +1,92 @@
-
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
-public class PlayerController : MonoBehaviour
+public class MovimientoJugador : MonoBehaviour
 {
-    [Header("Movimiento")]
-    public float velocidadMovimiento = 5.0f;
-    public float velocidadCorrer = 7f;
-    public float fuerzaSalto = 6f;
-    public float gravedad = -20f;
-    public float velocidadRotacion = 200.0f;
-    public float x, y;
+    public enum RolJugador { Jugador1, Jugador2 }
+
+    [Header("Configuración del Jugador")]
+    [SerializeField] private RolJugador rol = RolJugador.Jugador1;
+
+    [Header("Velocidades")]
+    [SerializeField] private float velocidadNormal = 5f;
+    [SerializeField] private float velocidadEsprint = 8f;
+    [SerializeField] private float velocidadRotacion = 14f;
+
+    [Header("Gravedad y Suelo")]
+    [SerializeField] private float gravedad = -20f;
+    [SerializeField] private float fuerzaPegadoSuelo = -2f; // Mantiene los pies en el suelo y rampas
 
     private CharacterController controller;
     private Vector3 velocidadVertical;
 
-    private Animator animator;
-
     void Awake()
     {
         controller = GetComponent<CharacterController>();
-        animator = GetComponentInChildren<Animator>();
     }
 
-    
-void Update()
-{
-    x = Input.GetAxisRaw("Horizontal");
-    y = Input.GetAxisRaw("Vertical");
-
-    Vector3 direccion = new Vector3(x, 0f, y);
-    direccion = Vector3.ClampMagnitude(direccion, 1f);
-
-
-    if (direccion.sqrMagnitude > 0.01f){
-        Quaternion rotacionObjetivo = Quaternion.LookRotation(direccion);
-        transform.rotation = Quaternion.RotateTowards(transform.rotation, rotacionObjetivo, velocidadRotacion * Time.deltaTime );
+    void Update()
+    {
+        Mover();
     }
 
-    bool corriendo = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+    private void Mover()
+    {
+        // 1. Obtener la entrada de movimiento según el jugador
+        float horizontal = 0f;
+        float vertical = 0f;
+        bool estaEsprintando = false;
 
-    float velocidad = corriendo? velocidadCorrer : velocidadMovimiento;
+        if (rol == RolJugador.Jugador1)
+        {
+            if (Input.GetKey(KeyCode.W)) vertical += 1f;
+            if (Input.GetKey(KeyCode.S)) vertical -= 1f;
+            if (Input.GetKey(KeyCode.D)) horizontal += 1f;
+            if (Input.GetKey(KeyCode.A)) horizontal -= 1f;
 
-    if (animator != null){animator.SetFloat("Speed", direccion.magnitude);}
+            estaEsprintando = Input.GetKey(KeyCode.LeftShift);
+        }
+        else // Jugador 2
+        {
+            if (Input.GetKey(KeyCode.UpArrow)) vertical += 1f;
+            if (Input.GetKey(KeyCode.DownArrow)) vertical -= 1f;
+            if (Input.GetKey(KeyCode.RightArrow)) horizontal += 1f;
+            if (Input.GetKey(KeyCode.LeftArrow)) horizontal -= 1f;
 
-    controller.Move( transform.forward * direccion.magnitude * velocidad * Time.deltaTime);
+            estaEsprintando = Input.GetKey(KeyCode.RightShift);
+        }
 
+        Vector3 direccionPlana = new Vector3(horizontal, 0f, vertical).normalized;
 
-    if (controller.isGrounded && velocidadVertical.y < 0f) {
-        velocidadVertical.y = -2f;
+        // 2. Velocidad horizontal
+        float velocidadActual = estaEsprintando ? velocidadEsprint : velocidadNormal;
+        Vector3 movimientoHorizontal = direccionPlana * velocidadActual;
+
+        // 3. Rotación hacia la dirección del movimiento
+        if (direccionPlana.sqrMagnitude > 0.001f)
+        {
+            Quaternion rotacionObjetivo = Quaternion.LookRotation(direccionPlana);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotacionObjetivo, Time.deltaTime * velocidadRotacion);
+        }
+
+        // 4. Gravedad y fijación al suelo (sin salto)
+        if (controller.isGrounded)
+        {
+            // Pequeña fuerza descendente constante para no flotar en bajadas de escaleras
+            velocidadVertical.y = fuerzaPegadoSuelo;
+        }
+        else
+        {
+            velocidadVertical.y += gravedad * Time.deltaTime;
+        }
+
+        // 5. Aplicar desplazamiento total al CharacterController
+        Vector3 movimientoFinal = (movimientoHorizontal + velocidadVertical) * Time.deltaTime;
+        controller.Move(movimientoFinal);
     }
 
-
-    if (controller.isGrounded && Input.GetKeyDown(KeyCode.Space)){ 
-        velocidadVertical.y = fuerzaSalto;
+    public void ConfigurarRol(RolJugador nuevoRol)
+    {
+        rol = nuevoRol;
     }
-
-    velocidadVertical.y += gravedad * Time.deltaTime;
-    controller.Move(velocidadVertical * Time.deltaTime);
-}
-
 }
