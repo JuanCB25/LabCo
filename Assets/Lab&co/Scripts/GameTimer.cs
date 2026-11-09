@@ -5,7 +5,7 @@ using UnityEngine.Events;
 public class GameTimer : MonoBehaviour
 {
     [Header("Configuracion del temporizador")]
-    [SerializeField] private float durationSeconds = 600f; //establece la duración de la partida
+    [SerializeField] private float durationSeconds = 180f; //establece la duración de la partida 3 min
 
     [Header("Eventos")]
     [SerializeField] private UnityEvent onTimerFinished;
