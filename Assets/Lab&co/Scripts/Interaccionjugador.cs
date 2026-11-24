@@ -45,8 +45,10 @@ public class InteraccionJugador : MonoBehaviour
         }
         else
         {
-            // Enter del teclado principal o del teclado numérico
-            return Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter);
+            // Mando: Botón A (Xbox) / Cruz X (PlayStation) + respaldo Enter
+            return Input.GetKeyDown(KeyCode.Joystick1Button0) ||
+                   Input.GetKeyDown(KeyCode.Return) ||
+                   Input.GetKeyDown(KeyCode.KeypadEnter);
         }
     }
 
@@ -58,7 +60,10 @@ public class InteraccionJugador : MonoBehaviour
         }
         else
         {
-            return Input.GetKeyDown(KeyCode.Backspace);
+            // Mando: Botón X (Xbox) / Cuadrado (PS) o Botón B (Xbox) / Círculo (PS) + respaldo Backspace
+            return Input.GetKeyDown(KeyCode.Joystick1Button2) ||
+                   Input.GetKeyDown(KeyCode.Joystick1Button1) ||
+                   Input.GetKeyDown(KeyCode.Backspace);
         }
     }
 
@@ -87,22 +92,34 @@ public class InteraccionJugador : MonoBehaviour
 
         if (mesaCandidata != null)
         {
+            // 1. Mesa libre: intentar colocar el objeto que llevamos
             if (objetoEnMano != null && mesaCandidata.PuedeRecibirItem())
             {
-                mesaCandidata.ColocarItem(objetoEnMano);
-                objetoEnMano = null;
+                if (mesaCandidata.ColocarItem(objetoEnMano))
+                {
+                    objetoEnMano = null;
+                }
                 return;
             }
 
+            // 2. Mesa ocupada y manos vacías: retirar objeto
             if (objetoEnMano == null && mesaCandidata.EstaOcupada)
             {
-                objetoEnMano = mesaCandidata.RetirarItem();
-                objetoEnMano.Coger(holdPoint);
+                if (holdPoint == null) return;
+
+                ItemRecogible itemObtenido = mesaCandidata.RetirarItem();
+                if (itemObtenido != null)
+                {
+                    objetoEnMano = itemObtenido;
+                    objetoEnMano.Coger(holdPoint);
+                }
                 return;
             }
 
+            // 3. Mesa ocupada y tenemos objeto en mano: intentar combinar (vertido)
             if (objetoEnMano != null && mesaCandidata.EstaOcupada)
             {
+                mesaCandidata.IntentarCombinarConItem(ref objetoEnMano);
                 return;
             }
         }

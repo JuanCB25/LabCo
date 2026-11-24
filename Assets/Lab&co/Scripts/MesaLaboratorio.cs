@@ -8,22 +8,21 @@ public class MesaLaboratorio : MonoBehaviour
     [SerializeField] private Transform snapPoint;
 
     [Header("Indicador Visual")]
-    [SerializeField] private MeshRenderer indicadorVisual;
-    [SerializeField] private Color colorDisponible = new Color(0f, 1f, 0.8f, 0.4f);
-    [SerializeField] private Color colorOcupado = new Color(1f, 0.2f, 0.2f, 0.15f);
+    [SerializeField] protected MeshRenderer indicadorVisual;
+    [SerializeField] protected Color colorDisponible = new Color(0f, 1f, 0.8f, 0.4f);
+    [SerializeField] protected Color colorOcupado = new Color(1f, 0.2f, 0.2f, 0.15f);
 
     protected MaterialPropertyBlock propBlock;
     protected ItemRecogible itemActual;
 
     public Transform SnapPoint => snapPoint != null ? snapPoint : transform;
 
-    void Awake()
+    protected virtual void Awake()
     {
         propBlock = new MaterialPropertyBlock();
         ActualizarIndicador();
     }
 
-    // Marcado como VIRTUAL para que el dispensador pueda sobreescribirlo
     public virtual bool EstaOcupada
     {
         get
@@ -36,10 +35,8 @@ public class MesaLaboratorio : MonoBehaviour
         }
     }
 
-    // Marcado como VIRTUAL
     public virtual bool PuedeRecibirItem() => !EstaOcupada;
 
-    // Marcado como VIRTUAL
     public virtual bool ColocarItem(ItemRecogible item)
     {
         if (item == null || EstaOcupada) return false;
@@ -68,7 +65,6 @@ public class MesaLaboratorio : MonoBehaviour
         return true;
     }
 
-    // Marcado como VIRTUAL
     public virtual ItemRecogible RetirarItem()
     {
         if (itemActual == null) return null;
@@ -80,6 +76,40 @@ public class MesaLaboratorio : MonoBehaviour
 
         ActualizarIndicador();
         return itemRetirado;
+    }
+
+    // Permite verter el reactivo verde dentro de un matraz vacío sobre la mesa
+    public virtual bool IntentarCombinarConItem(ref ItemRecogible itemEntrante)
+    {
+        if (itemActual == null || itemEntrante == null) return false;
+
+        // Caso 1: Hay un matraz vacío en la mesa y el jugador trae el reactivo verde
+        if (itemActual.Tipo == ItemRecogible.TipoItem.Matraz && itemEntrante.Tipo == ItemRecogible.TipoItem.ReactivoVerde)
+        {
+            MatrazQuimico matraz = itemActual.GetComponent<MatrazQuimico>();
+            if (matraz != null && matraz.EstaVacio)
+            {
+                matraz.LlenarConReactivo();
+                Destroy(itemEntrante.gameObject);
+                itemEntrante = null;
+                return true;
+            }
+        }
+
+        // Caso 2: Hay un reactivo verde en la mesa y el jugador trae un matraz vacío
+        if (itemActual.Tipo == ItemRecogible.TipoItem.ReactivoVerde && itemEntrante.Tipo == ItemRecogible.TipoItem.Matraz)
+        {
+            MatrazQuimico matraz = itemEntrante.GetComponent<MatrazQuimico>();
+            if (matraz != null && matraz.EstaVacio)
+            {
+                matraz.LlenarConReactivo();
+                ItemRecogible reactivoConsumido = RetirarItem();
+                if (reactivoConsumido != null) Destroy(reactivoConsumido.gameObject);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     protected virtual void ActualizarIndicador()

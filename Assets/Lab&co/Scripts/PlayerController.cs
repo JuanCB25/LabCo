@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
-public class MovimientoJugador : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
     public enum RolJugador { Jugador1, Jugador2 }
 
@@ -13,9 +13,12 @@ public class MovimientoJugador : MonoBehaviour
     [SerializeField] private float velocidadEsprint = 8f;
     [SerializeField] private float velocidadRotacion = 14f;
 
+    [Header("Mando (Jugador 2)")]
+    [SerializeField] private float deadzoneMando = 0.2f;
+
     [Header("Gravedad y Suelo")]
     [SerializeField] private float gravedad = -20f;
-    [SerializeField] private float fuerzaPegadoSuelo = -2f; // Mantiene los pies en el suelo y rampas
+    [SerializeField] private float fuerzaPegadoSuelo = -2f;
 
     private CharacterController controller;
     private Vector3 velocidadVertical;
@@ -32,13 +35,13 @@ public class MovimientoJugador : MonoBehaviour
 
     private void Mover()
     {
-        // 1. Obtener la entrada de movimiento según el jugador
         float horizontal = 0f;
         float vertical = 0f;
         bool estaEsprintando = false;
 
         if (rol == RolJugador.Jugador1)
         {
+            // TECLADO (Jugador 1)
             if (Input.GetKey(KeyCode.W)) vertical += 1f;
             if (Input.GetKey(KeyCode.S)) vertical -= 1f;
             if (Input.GetKey(KeyCode.D)) horizontal += 1f;
@@ -46,33 +49,47 @@ public class MovimientoJugador : MonoBehaviour
 
             estaEsprintando = Input.GetKey(KeyCode.LeftShift);
         }
-        else // Jugador 2
+        else
         {
-            if (Input.GetKey(KeyCode.UpArrow)) vertical += 1f;
-            if (Input.GetKey(KeyCode.DownArrow)) vertical -= 1f;
-            if (Input.GetKey(KeyCode.RightArrow)) horizontal += 1f;
-            if (Input.GetKey(KeyCode.LeftArrow)) horizontal -= 1f;
+            // MANDO - Stick Izquierdo (Jugador 2)
+            horizontal = Input.GetAxisRaw("Mando_Horizontal");
+            vertical = Input.GetAxisRaw("Mando_Vertical");
 
-            estaEsprintando = Input.GetKey(KeyCode.RightShift);
+            // Respaldo con flechas del teclado si no se mueve el stick
+            if (Mathf.Abs(horizontal) < deadzoneMando && Mathf.Abs(vertical) < deadzoneMando)
+            {
+                horizontal = 0f;
+                vertical = 0f;
+                if (Input.GetKey(KeyCode.UpArrow)) vertical += 1f;
+                if (Input.GetKey(KeyCode.DownArrow)) vertical -= 1f;
+                if (Input.GetKey(KeyCode.RightArrow)) horizontal += 1f;
+                if (Input.GetKey(KeyCode.LeftArrow)) horizontal -= 1f;
+            }
+
+            // Esprintar con RB/R1 (Joystick1Button5), LB/L1 (Joystick1Button4) o Shift Derecho
+            estaEsprintando = Input.GetKey(KeyCode.Joystick1Button5) ||
+                              Input.GetKey(KeyCode.Joystick1Button4) ||
+                              Input.GetKey(KeyCode.RightShift);
         }
 
-        Vector3 direccionPlana = new Vector3(horizontal, 0f, vertical).normalized;
+        Vector3 direccionPlana = new Vector3(horizontal, 0f, vertical);
 
-        // 2. Velocidad horizontal
+        if (direccionPlana.magnitude > 1f)
+        {
+            direccionPlana.Normalize();
+        }
+
         float velocidadActual = estaEsprintando ? velocidadEsprint : velocidadNormal;
         Vector3 movimientoHorizontal = direccionPlana * velocidadActual;
 
-        // 3. Rotación hacia la dirección del movimiento
         if (direccionPlana.sqrMagnitude > 0.001f)
         {
             Quaternion rotacionObjetivo = Quaternion.LookRotation(direccionPlana);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotacionObjetivo, Time.deltaTime * velocidadRotacion);
         }
 
-        // 4. Gravedad y fijación al suelo (sin salto)
         if (controller.isGrounded)
         {
-            // Pequeña fuerza descendente constante para no flotar en bajadas de escaleras
             velocidadVertical.y = fuerzaPegadoSuelo;
         }
         else
@@ -80,7 +97,6 @@ public class MovimientoJugador : MonoBehaviour
             velocidadVertical.y += gravedad * Time.deltaTime;
         }
 
-        // 5. Aplicar desplazamiento total al CharacterController
         Vector3 movimientoFinal = (movimientoHorizontal + velocidadVertical) * Time.deltaTime;
         controller.Move(movimientoFinal);
     }
