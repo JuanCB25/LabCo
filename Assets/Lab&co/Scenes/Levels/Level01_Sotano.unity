@@ -9666,7 +9666,8 @@ PrefabInstance:
     - {fileID: -1391359038818786868, guid: fe0e2266b29f7b644b0811a57ceb0dd7, type: 3}
     - {fileID: -2923802365599518174, guid: fe0e2266b29f7b644b0811a57ceb0dd7, type: 3}
     - {fileID: -2291724105500072817, guid: fe0e2266b29f7b644b0811a57ceb0dd7, type: 3}
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 8876806707049264463, guid: fe0e2266b29f7b644b0811a57ceb0dd7, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 1822811081740728, guid: fe0e2266b29f7b644b0811a57ceb0dd7, type: 3}
@@ -10571,8 +10572,8 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 2
-  m_Color: {r: 0, g: 1, b: 1, a: 1}
-  m_Intensity: 0.85
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Intensity: 0.65
   m_Range: 2.2
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
