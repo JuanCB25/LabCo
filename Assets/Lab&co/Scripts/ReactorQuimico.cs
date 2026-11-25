@@ -28,43 +28,74 @@ public class ReactorQuimico : MesaLaboratorio
 
     void Update()
     {
+    
         if (matrazEnReactor == null) return;
 
-        // FASE 1: Cocinando el reactivo verde
+        // FASE 1: Cocinando
         if (matrazEnReactor.TieneReactivo)
         {
             temporizador += Time.deltaTime;
-            ActualizarBarraUI(temporizador / tiempoCoccion, colorProcesando);
+
+            float progresoCoccion = temporizador / tiempoCoccion;
+            ActualizarBarraUI(progresoCoccion, colorProcesando);
+            PintarIndicador(colorProcesando);
 
             if (temporizador >= tiempoCoccion)
             {
                 matrazEnReactor.CompletarCoccion();
+
                 temporizador = 0f;
-                ActualizarIndicador();
+
+                // Mostrar inmediatamente el estado cocinado
+                ActualizarBarraUI(0f, colorListo);
+                PintarIndicador(colorListo);
+
+                Debug.Log("¡MATRAZ COCINADO! Retíralo del reactor.");
+                Debug.Log("Estado actual: " + matrazEnReactor.EstadoActual);
             }
         }
-        // FASE 2: Cocinado -> Cuenta atrás antes de quemarse
+        // FASE 2: Cocinado, esperando a que se retire
         else if (matrazEnReactor.EstaCocinado)
         {
             temporizador += Time.deltaTime;
-            float progresoQuemado = temporizador / tiempoAntesDeQuemarse;
-            ActualizarBarraUI(progresoQuemado, colorPeligro);
 
-            // Parpadeo urgente en la segunda mitad del tiempo
-            if (progresoQuemado > 0.5f)
+            float tiempoMaximo = Mathf.Max(0.1f, tiempoAntesDeQuemarse);
+            float progresoQuemado = temporizador / tiempoMaximo;
+
+            // La barra se mantiene verde durante la primera mitad
+            if (progresoQuemado < 0.5f)
             {
+                ActualizarBarraUI(progresoQuemado, colorListo);
+                PintarIndicador(colorListo);
+            }
+            else
+            {
+                // En la segunda mitad avisa de que está a punto de quemarse
+                ActualizarBarraUI(progresoQuemado, colorPeligro);
+
                 bool pulso = Mathf.PingPong(Time.time * 8f, 1f) > 0.5f;
                 PintarIndicador(pulso ? colorPeligro : colorListo);
             }
 
-            if (temporizador >= tiempoAntesDeQuemarse)
+            if (temporizador >= tiempoMaximo)
             {
                 matrazEnReactor.Quemar();
+
                 ActualizarBarraUI(1f, colorQuemado);
-                ActualizarIndicador();
+                PintarIndicador(colorQuemado);
+
+                Debug.LogWarning("¡MATRAZ QUEMADO!");
             }
         }
+            // FASE 3: Matraz quemado
+        else if (matrazEnReactor.EstaQuemado)
+        {
+            ActualizarBarraUI(1f, colorQuemado);
+            PintarIndicador(colorQuemado);
+        }
     }
+
+    
 
     public override bool ColocarItem(ItemRecogible item)
     {
