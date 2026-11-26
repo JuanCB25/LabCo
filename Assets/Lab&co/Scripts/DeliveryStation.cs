@@ -17,21 +17,6 @@ public class DeliveryStation : MesaLaboratorio
             return false;
         }
 
-        // Comprobar que el matraz está cocinado
-        if (matraz.EstaQuemado)
-        {
-            Debug.LogWarning("¡Entrega rechazada! El matraz está quemado.");
-            return false;
-        }
-
-        if (!matraz.EstaCocinado)
-        {
-            Debug.LogWarning(
-                "Entrega rechazada: el matraz todavía no está cocinado. "
-            );
-            return false;
-        }
-
         // Comprobar que existe el gestor de pedidos
         if (OrderManager.Instance == null)
         {
@@ -39,11 +24,15 @@ public class DeliveryStation : MesaLaboratorio
             return false;
         }
 
-        // Completar el pedido
-        if (!OrderManager.Instance.CompletarPedido())
-            return false;
+        // Registrar la entrega según el estado del matraz
+        MatrazQuimico.EstadoMatraz estado = matraz.EstadoActual;
 
-        Debug.Log("¡Matraz entregado correctamente!");
+        if (!OrderManager.Instance.RegistrarEntrega(estado))
+        {
+            return false;
+        }
+
+        Debug.Log("Matraz entregado. Estado: " + estado);
 
         // Consumir el objeto entregado
         Destroy(item.gameObject);

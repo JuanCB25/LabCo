@@ -911,6 +911,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::OrderManager
   pedidoActual: 1
   pedidoCompletado: 0
+  puntuacionObjetivo: 500
+  puntosRecetaCorrecta: 50
+  penalizacionSinCocinar: -50
+  penalizacionQuemado: -100
   gameOverManager: {fileID: 0}
 --- !u!1 &117849003
 GameObject:
@@ -2340,7 +2344,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &336919377
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4115,6 +4119,7 @@ RectTransform:
   m_Children:
   - {fileID: 336919377}
   - {fileID: 1443751224}
+  - {fileID: 500447432}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -4898,7 +4903,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 0}
+    m_TransformParent: {fileID: 650189971}
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: d250b97469d42514cb950bb0012daa3f, type: 3}
       propertyPath: m_LocalScale.x
@@ -4914,11 +4919,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d250b97469d42514cb950bb0012daa3f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -6.2855
+      value: -336.2855
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d250b97469d42514cb950bb0012daa3f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.6897
+      value: -376.8103
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d250b97469d42514cb950bb0012daa3f, type: 3}
       propertyPath: m_LocalPosition.z
@@ -7241,6 +7246,7 @@ GameObject:
   - component: {fileID: 1190630882}
   - component: {fileID: 1190630884}
   - component: {fileID: 1190630883}
+  - component: {fileID: 1190630885}
   m_Layer: 5
   m_Name: RecipeProgress
   m_TagString: Untagged
@@ -7264,7 +7270,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: -30}
+  m_AnchoredPosition: {x: -5.2657013, y: -24.734192}
   m_SizeDelta: {x: -16, y: 130}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1190630883
@@ -7287,17 +7293,17 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'INGREDIENTES: 0/2'
+  m_text: 0 / 500 PUNTOS
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8a89fa14b10d46a99122fd4f73fca9a2, type: 2}
+  m_sharedMaterial: {fileID: 2140474, guid: 8a89fa14b10d46a99122fd4f73fca9a2, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -7314,13 +7320,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 17
+  m_fontSize: 20.4
   m_fontSizeBase: 17
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 1
   m_VerticalAlignment: 256
   m_textAlignment: 65535
@@ -7353,7 +7359,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 14.480446, y: 0, z: 0, w: 100.04683}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -7367,6 +7373,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1190630881}
   m_CullTransparentMesh: 1
+--- !u!114 &1190630885
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1190630881}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9b866f3b1b53fb41bbd9e02c7f4008d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RecipeProgressUI
 --- !u!1 &1197699364
 GameObject:
   m_ObjectHideFlags: 0
@@ -11171,7 +11189,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -50}
+  m_AnchoredPosition: {x: 11.910095, y: -44.640503}
   m_SizeDelta: {x: 0, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1825230628
@@ -11196,8 +11214,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: RECETA 001
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8a89fa14b10d46a99122fd4f73fca9a2, type: 2}
+  m_sharedMaterial: {fileID: 2140474, guid: 8a89fa14b10d46a99122fd4f73fca9a2, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -11221,10 +11239,10 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 25
-  m_fontSizeBase: 25
+  m_fontSize: 22.3
+  m_fontSizeBase: 40
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 1
@@ -11260,7 +11278,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: 0, z: 22.020508, w: 17.271881}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -13247,5 +13265,4 @@ SceneRoots:
   - {fileID: 1725259936}
   - {fileID: 588152910}
   - {fileID: 16748407}
-  - {fileID: 879032649}
   - {fileID: 650189971}
