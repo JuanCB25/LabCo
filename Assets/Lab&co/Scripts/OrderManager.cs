@@ -97,9 +97,12 @@ public class OrderManager : MonoBehaviour
 
     private void FinalizarPedido()
     {
-        if (tapaCaja != null)
-        {
+        if (tapaCaja != null){
             tapaCaja.SetActive(true);
+            Debug.Log("TAPA ACTIVADA: " + tapaCaja.name);
+        }
+        else{
+            Debug.LogError("TAPA CAJA NO ASIGNADA");
         }
         if (pedidoCompletado)
             return;

@@ -7,6 +7,7 @@ public class GameOverManager : MonoBehaviour
 {
     [Header("Panel de final de partida")]
     [SerializeField] private GameObject gameOverPanel;
+    [SerializeField] private GameObject panelRecetas;
     [SerializeField] private TMP_Text tituloPanel;
     [SerializeField] private GameObject botonContinuar;
     [SerializeField] private TMPro.TMP_Text mensajeFinal;
@@ -41,6 +42,7 @@ public class GameOverManager : MonoBehaviour
     {
         gameOverPanel.SetActive(true);
 
+        panelRecetas.SetActive(false);
         if (tituloPanel != null)
             tituloPanel.text = "GAME OVER";
 
@@ -65,7 +67,10 @@ public class GameOverManager : MonoBehaviour
     // FINAL POR COMPLETAR EL NIVEL
     public void ShowLevelComplete()
     {
+    
         gameOverPanel.SetActive(true);
+        
+        panelRecetas.SetActive(false);
        
         if (tituloPanel != null)
             tituloPanel.text = "¡NIVEL SUPERADO!";
