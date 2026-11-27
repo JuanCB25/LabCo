@@ -911,10 +911,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::OrderManager
   pedidoActual: 1
   pedidoCompletado: 0
-  puntuacionObjetivo: 500
+  puntuacionObjetivo: 150
   puntosRecetaCorrecta: 50
   penalizacionSinCocinar: -50
   penalizacionQuemado: -100
+  tapaCaja: {fileID: 0}
   gameOverManager: {fileID: 0}
 --- !u!1 &117849003
 GameObject:
@@ -3548,7 +3549,7 @@ Transform:
   m_GameObject: {fileID: 564457079}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.3, y: 1.2368, z: -6.4027}
+  m_LocalPosition: {x: -1.3, y: 1.5832999, z: -6.4027}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -9531,6 +9532,75 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1595394189}
   m_CullTransparentMesh: 1
+--- !u!1001 &1599533844
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3153252002073735353, guid: 8055111d261e730409fd149f04475ce1, type: 3}
+      propertyPath: m_Name
+      value: TAPA_caja_entregas
+      objectReference: {fileID: 0}
+    - target: {fileID: 3153252002073735353, guid: 8055111d261e730409fd149f04475ce1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6924588490602699664, guid: 8055111d261e730409fd149f04475ce1, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.45746893
+      objectReference: {fileID: 0}
+    - target: {fileID: 6924588490602699664, guid: 8055111d261e730409fd149f04475ce1, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 2.8041232
+      objectReference: {fileID: 0}
+    - target: {fileID: 6924588490602699664, guid: 8055111d261e730409fd149f04475ce1, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -6.3981104
+      objectReference: {fileID: 0}
+    - target: {fileID: 6924588490602699664, guid: 8055111d261e730409fd149f04475ce1, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6924588490602699664, guid: 8055111d261e730409fd149f04475ce1, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6924588490602699664, guid: 8055111d261e730409fd149f04475ce1, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6924588490602699664, guid: 8055111d261e730409fd149f04475ce1, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6924588490602699664, guid: 8055111d261e730409fd149f04475ce1, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6924588490602699664, guid: 8055111d261e730409fd149f04475ce1, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6924588490602699664, guid: 8055111d261e730409fd149f04475ce1, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7733459185497637162, guid: 8055111d261e730409fd149f04475ce1, type: 3}
+      propertyPath: m_Name
+      value: caja_entrega
+      objectReference: {fileID: 0}
+    - target: {fileID: 9131637588159596042, guid: 8055111d261e730409fd149f04475ce1, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.2875243
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 8055111d261e730409fd149f04475ce1, type: 3}
 --- !u!1 &1603687297
 GameObject:
   m_ObjectHideFlags: 0
@@ -13266,3 +13336,4 @@ SceneRoots:
   - {fileID: 588152910}
   - {fileID: 16748407}
   - {fileID: 650189971}
+  - {fileID: 1599533844}

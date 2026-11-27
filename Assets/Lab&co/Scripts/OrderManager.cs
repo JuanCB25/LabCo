@@ -15,6 +15,9 @@ public class OrderManager : MonoBehaviour
     [SerializeField] private int penalizacionSinCocinar = -50;
     [SerializeField] private int penalizacionQuemado = -100;
 
+    [Header("Caja de Entrga")]
+    [SerializeField] private GameObject tapaCaja;
+
     private int puntuacionActual = 0;
 
     [Header("Final del Nivel")]
@@ -32,6 +35,10 @@ public class OrderManager : MonoBehaviour
 
     private void Awake()
     {
+        if (tapaCaja != null){
+            tapaCaja.SetActive(false);
+        }
+
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -90,6 +97,10 @@ public class OrderManager : MonoBehaviour
 
     private void FinalizarPedido()
     {
+        if (tapaCaja != null)
+        {
+            tapaCaja.SetActive(true);
+        }
         if (pedidoCompletado)
             return;
 
@@ -99,6 +110,13 @@ public class OrderManager : MonoBehaviour
         }
 
         pedidoCompletado = true;
+        // Mostrar la tapa de la caja al completar el pedido
+        if (tapaCaja != null){
+            tapaCaja.SetActive(true);
+        }
+        else{
+            Debug.LogWarning("No se ha asignado la tapa de la caja.");
+        }
 
         Debug.Log("¡Pedido " + pedidoActual + " completado!");
 
